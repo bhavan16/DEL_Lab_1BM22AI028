@@ -1,0 +1,121 @@
+1]
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+class Neuron:
+    def __init__(self, weights, bias):
+        self.weights = weights
+        self.bias = bias
+
+    def feedforward(self, inputs):
+        total = np.dot(self.weights, inputs) + self.bias
+        return {
+            "threshold": self.threshold(total),
+            "sigmoid": self.sigmoid(total),
+            "tanh": self.tanh(total),
+            "ReLU": self.relu(total)
+        }
+
+    def threshold(self, x):
+        return 1 if x > 0 else 0
+
+    def sigmoid(self, x):
+        return 1 / (1 + np.exp(-x))
+
+    def tanh(self, x):
+        return np.tanh(x)
+
+    def relu(self, x):
+        return np.maximum(0, x)
+
+weights = np.array([0, 1])
+bias = 2
+neuron = Neuron(weights, bias)
+
+x_values = np.linspace(-10, 10, 100)
+
+threshold_outputs = [neuron.threshold(x) for x in x_values]
+sigmoid_outputs = [neuron.sigmoid(x) for x in x_values]
+tanh_outputs = [neuron.tanh(x) for x in x_values]
+relu_outputs = [neuron.relu(x) for x in x_values]
+
+plt.figure(figsize=(12, 8))
+
+plt.subplot(2, 2, 1)
+plt.plot(x_values, threshold_outputs, label='Threshold', color='blue')
+plt.title('Threshold Activation Function')
+plt.xlabel('Input')
+plt.ylabel('Output')
+plt.grid()
+
+plt.subplot(2, 2, 2)
+plt.plot(x_values, sigmoid_outputs, label='Sigmoid', color='orange')
+plt.title('Sigmoid Activation Function')
+plt.xlabel('Input')
+plt.ylabel('Output')
+plt.grid()
+
+plt.subplot(2, 2, 3)
+plt.plot(x_values, tanh_outputs, label='Tanh', color='green')
+plt.title('Tanh Activation Function')
+plt.xlabel('Input')
+plt.ylabel('Output')
+plt.grid()
+
+plt.subplot(2, 2, 4)
+plt.plot(x_values, relu_outputs, label='ReLU', color='red')
+plt.title('ReLU Activation Function')
+plt.xlabel('Input')
+plt.ylabel('Output')
+plt.grid()
+
+
+
+2]
+import numpy as np
+
+class Neuron:
+    def __init__(self, weights, bias):
+        self.weights = weights
+        self.bias = bias
+
+    def step_function(self, x):
+        return 1 if x >= 0 else 0           
+
+    def sigmoid(self, x):
+        return 1 / (1 + np.exp(-x))
+
+    def tanh(self, x):
+        return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))
+
+    def relu(self, x):
+        return max(0, x)
+
+    def leaky_relu(self, x):
+        return x if x > 0 else 0.01 * x  
+
+    def xor(self, inputs):
+        return 1 if (inputs[0] != inputs[1]) else 0
+
+    def forward(self, inputs):
+        if len(inputs) != len(self.weights):
+            raise ValueError("Input size must match weights size.")
+        
+        op = np.dot(inputs, self.weights) + self.bias
+
+        print("Sigmoid output: ", self.sigmoid(op))
+        print("Step Function output: ", self.step_function(op))
+        print("Tanh output: ", self.tanh(op))
+        print("ReLU output: ", self.relu(op))
+        print("Leaky ReLU output: ", self.leaky_relu(op))
+        print("XOR output: ", self.xor(inputs))  
+
+weights = np.array([0.5, 1]) 
+bias = 1
+
+neuron = Neuron(weights, bias)
+
+
+inputs = np.array([1, 0]) 
+neuron.forward(inputs)
