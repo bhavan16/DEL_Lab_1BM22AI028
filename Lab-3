@@ -1,0 +1,130 @@
+1.
+import numpy as np
+X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+y = np.array([[0], [1], [1], [0]])
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+def sigmoid_derivative(x):
+    return x * (1 - x)
+
+input_layer_neurons = 2
+hidden_layer_neurons = 2
+output_neurons = 1
+learning_rate = 0.1
+epochs = 10000
+
+np.random.seed(42)
+weights_input_hidden = np.random.uniform(size=(input_layer_neurons, hidden_layer_neurons))
+weights_hidden_output = np.random.uniform(size=(hidden_layer_neurons, output_neurons))
+
+for epoch in range(epochs):
+    hidden_layer_input = np.dot(X, weights_input_hidden)
+    hidden_layer_output = sigmoid(hidden_layer_input)
+    
+    final_input = np.dot(hidden_layer_output, weights_hidden_output)
+    final_output = sigmoid(final_input)
+
+    error = y - final_output
+
+    d_final_output = error * sigmoid_derivative(final_output)
+    error_hidden_layer = d_final_output.dot(weights_hidden_output.T)
+    d_hidden_layer = error_hidden_layer * sigmoid_derivative(hidden_layer_output)
+
+    weights_hidden_output += hidden_layer_output.T.dot(d_final_output) * learning_rate
+    weights_input_hidden += X.T.dot(d_hidden_layer) * learning_rate
+
+hidden_layer_output = sigmoid(np.dot(X, weights_input_hidden))
+final_output = sigmoid(np.dot(hidden_layer_output, weights_hidden_output))
+
+predictions = np.round(final_output).astype(int)
+
+print("Predictions:")
+for i in range(len(X)):
+    print(f"Input: {X[i]} => Predicted Output: {predictions[i][0]}, Actual Output: {y[i][0]}")
+
+
+
+
+2.
+import random
+import math
+from sklearn.datasets import load_iris  # Only using this to load the dataset
+
+def sigmoid(x):
+    return 1 / (1 + math.exp(-x))
+
+def sigmoid_derivative(x):
+    return x * (1 - x)
+
+
+iris = load_iris()
+X = iris.data  
+y = iris.target  
+
+def one_hot_encode(y, num_classes):
+    return [[1 if i == label else 0 for i in range(num_classes)] for label in y]
+
+y_encoded = one_hot_encode(y, 3)
+
+def initialize_weights(input_size, hidden_size, output_size):
+    weights_input_hidden = [[random.uniform(-1, 1) for _ in range(hidden_size)] for _ in range(input_size)]
+    weights_hidden_output = [[random.uniform(-1, 1) for _ in range(output_size)] for _ in range(hidden_size)]
+    return weights_input_hidden, weights_hidden_output
+
+
+def forward_pass(inputs, weights_input_hidden, weights_hidden_output):
+    hidden_layer = [sigmoid(sum(inputs[j] * weights_input_hidden[j][i] for j in range(len(inputs)))) for i in range(len(weights_input_hidden[0]))]
+    output_layer = [sigmoid(sum(hidden_layer[j] * weights_hidden_output[j][i] for j in range(len(hidden_layer)))) for i in range(len(weights_hidden_output[0]))]
+    return hidden_layer, output_layer
+
+
+def backpropagation(inputs, hidden_layer, output_layer, expected, weights_input_hidden, weights_hidden_output, learning_rate):
+    output_errors = [expected[i] - output_layer[i] for i in range(len(expected))]
+    output_deltas = [output_errors[i] * sigmoid_derivative(output_layer[i]) for i in range(len(output_errors))]
+
+    for i in range(len(weights_hidden_output)):
+        for j in range(len(weights_hidden_output[i])):
+            weights_hidden_output[i][j] += learning_rate * output_deltas[j] * hidden_layer[i]
+
+    hidden_errors = [sum(output_deltas[j] * weights_hidden_output[i][j] for j in range(len(output_deltas))) for i in range(len(hidden_layer))]
+    hidden_deltas = [hidden_errors[i] * sigmoid_derivative(hidden_layer[i]) for i in range(len(hidden_errors))]
+
+    for i in range(len(weights_input_hidden)):
+        for j in range(len(weights_input_hidden[i])):
+            weights_input_hidden[i][j] += learning_rate * hidden_deltas[j] * inputs[i]
+
+def train_network(X, y_encoded, learning_rate=0.1, epochs=1000):
+    input_size = len(X[0])  
+    hidden_size = 4 
+    output_size = 3 
+
+    weights_input_hidden, weights_hidden_output = initialize_weights(input_size, hidden_size, output_size)
+
+    for epoch in range(epochs):
+        for i in range(len(X)):
+            inputs = X[i]
+            expected = y_encoded[i]
+
+            hidden_layer, output_layer = forward_pass(inputs, weights_input_hidden, weights_hidden_output)
+            backpropagation(inputs, hidden_layer, output_layer, expected, weights_input_hidden, weights_hidden_output, learning_rate)
+
+    return weights_input_hidden, weights_hidden_output
+
+def predict(weights_input_hidden, weights_hidden_output, inputs):
+    hidden_layer, output_layer = forward_pass(inputs, weights_input_hidden, weights_hidden_output)
+    return output_layer
+
+weights_input_hidden, weights_hidden_output = train_network(X, y_encoded, learning_rate=0.1, epochs=10000)
+
+
+correct_predictions = 0
+
+for i, row in enumerate(X):
+    output = predict(weights_input_hidden, weights_hidden_output, row)
+    predicted_class = output.index(max(output))
+    if predicted_class == y[i]:  # Compare with actual class
+        correct_predictions += 1
+
+accuracy = (correct_predictions / len(X)) * 100
+print(f"Accuracy: {accuracy:.2f}%")
+
