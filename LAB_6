@@ -2,17 +2,21 @@
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
+
 import tensorflow as tf
 from tensorflow import keras
-from sklearn.metrics import classification_report, confusion_matrix
 
-df = pd.read_csv("/content/sonar data.csv",header=None)
-print(df.head())
+from sklearn.metrics import classification_report, confusion_matrix
+df = pd.read_csv('sonar.csv', header = None)
+
+# df.head()
+
+df = df.rename(columns= {60:'output'})
 
 X = df.drop('output', axis=1)
 y = df['output']
 y = pd.get_dummies(y, drop_first= True)
-y.head()
+# y.head()
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=10)
 
@@ -28,9 +32,12 @@ model  = keras.Sequential([
     keras.layers.Dense(1, activation = 'sigmoid')])
 
 model.compile(loss ='binary_crossentropy', optimizer = 'adam', metrics=['accuracy'])
+
 model.fit(X_train, y_train, epochs=100, batch_size=16)
 
 model.evaluate(X_test,y_test)
+
 y_pred = model.predict(X_test)
 
+y_pred = np.round(y_pred)
 print(classification_report(y_test, y_pred))
